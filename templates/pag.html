@@ -1,0 +1,117 @@
+<html>
+    <head>
+        <!-- CDN Jquery, googleCharts y materialize -->
+        <script
+            src="https://code.jquery.com/jquery-3.3.1.min.js"
+            integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+            crossorigin="anonymous">
+        </script>
+        <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    </head>
+    <body>
+        <div class="row">
+            <div class="col s12 m6">
+                <div class="card blue-grey darken-2">
+                    <div class="card-content white-text">
+                        <span class="card-title">Temperatura</span>
+                        <!-- div donde se cargara la tabla -->
+                        <div id="temperature_div"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col s12 m6">
+                <div class="card blue-grey darken-3">
+                    <div class="card-content white-text">
+                        <span class="card-title">Humedad</span>
+                        <!-- div donde se cargara la tabla -->
+                        <div id="humidity_div"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
+<script>
+//funcion que trae los datos y los pasa a las funciones que inicializan los graficos 
+$(document).ready(function(){
+  google.charts.load('current', {packages: ['corechart']});
+  google.charts.setOnLoadCallback(draw);
+
+});
+
+function draw(){
+  setInterval(function(){
+    jQuery.getJSON({
+      url: '/data',
+      success: function(raw_points){
+          if (raw_points != 0){
+              var temperature_points = [];
+              var humidity_points = [];
+              raw_points.forEach(data => {
+                  temperature_points.push([new Date(data.hour*1000), data.temp])
+                  humidity_points.push([new Date(data.hour*1000), data.hum])
+              });
+              drawTemperature(temperature_points)
+              drawHumidity(humidity_points)
+          }
+      }
+    });
+  },1000)
+}
+
+function drawTemperature(points) {
+
+var data = new google.visualization.DataTable();
+data.addColumn('date', 'hour');
+data.addColumn('number', 'temperature');
+
+data.addRows(points);
+
+var options = {
+  hAxis: {
+    title: 'Time'
+  },
+  vAxis: {
+    title: 'Temperature'
+  }
+};
+
+div_element = document.getElementById('temperature_div')
+if (div_element){
+  var chart = new google.visualization.LineChart(div_element);  
+}else{
+    alert("Falta el elemento del html")
+}
+
+chart.draw(data, options);
+}
+
+function drawHumidity(points) {
+
+      var data = new google.visualization.DataTable();
+      data.addColumn('date', 'hour');
+      data.addColumn('number', 'humidity');
+
+      data.addRows(points);
+
+      var options = {
+        hAxis: {
+          title: 'Time'
+        },
+        vAxis: {
+          title: 'Humidity'
+        }
+      };
+
+      div_element = document.getElementById('humidity_div')
+      if (div_element){
+        var chart = new google.visualization.LineChart(div_element);  
+      }else{
+          alert("Falta el elemento del html")
+      }
+
+      chart.draw(data, options);
+}
+</script>
